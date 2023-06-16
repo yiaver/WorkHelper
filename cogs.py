@@ -18,7 +18,7 @@ class PontosTrabalho(commands.Cog):
         self.register = Regitrador(f"{author}")
         #role = discord.utils.get(ctx.guild.roles, name="Trabalhando")
         self.register.EntradaRegistro()
-        await ctx.response.send_message(f"Usuario : {author} Entrou No trabalho. ")
+        return await ctx.response.send_message(f"Usuario : {author} Entrou No trabalho. ")
         
 
     @application_command(name="sair",description="sai do trabalho",guild_ids=guildlist)
@@ -27,7 +27,7 @@ class PontosTrabalho(commands.Cog):
         author = ctx.author
         
         self.register.SaidaRegistro()
-        await ctx.response.send_message(f"Usuario : {author} Saiu do Trabalho .\nHoras Trabalhadas:\n *** {self.register.HorasTrabalhadas()} ***")
+        return await ctx.response.send_message(f"Usuario : {author} Saiu do Trabalho .\nHoras Trabalhadas:\n *** {self.register.HorasTrabalhadas()} ***")
 
     @application_command(name="tabela_de_trabalho",description="pega a sua tabela de trabalho",guild_ids=guildlist)
     async def tabela_de_trabalho (self,ctx):
