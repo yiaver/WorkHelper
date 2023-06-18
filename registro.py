@@ -14,6 +14,7 @@ class Regitrador():
         #control area
         self.EntradaStatus = False
         self.__DiaDeTrabalho = 0
+        self.actualRow = 0
 
         #entrada e saida horarios 
         self.__HoraDiaEntrada = ""
@@ -39,50 +40,6 @@ class Regitrador():
     def HoraDiaSaida(self):
         return self.__HoraDiaSaida
     
-    def __verifySheetPlus(self):
-        try:
-            wb =  load_workbook(f"{os.getcwd()}\{self.user}.xlsx")
-            wbLists = wb.sheetnames
-            if not self.sheetName in wbLists:
-                wb.create_sheet(f"{self.sheetName}")
-
-                sheet = wb[f"{self.sheetName}"]
-                sheet.append({"A":"Data de Entrada","B":"Hora de entrada","C":"Data de saida","D":"Hora de saida","E":"Horas trabalhadas"})
-                print("1")
-                wb.save(f"{self.user}.xlsx")
-                print("1")
-                
-                return True
-            else:
-                return False
-            
-        except Exception as log:
-            with open("Log___verifySheet.txt","w") as erro:
-                erro.writelines(f"{log}")
-    
-    def ExcelRegistro(self):
-        wb =  load_workbook(f"{os.getcwd()}\{self.user}.xlsx")
-        self.__verifySheetPlus()
-        sheet = wb[f"{self.sheetName}"]
-        
-        
-        sheet.append( {
-                      "A":self.__HoraDiaEntrada["entrada"]["data"],
-                      "B":f'{self.__HoraDiaEntrada["entrada"]["hora"]}',
-                      "C":self.__HoraDiaSaida["saida"]["data"],
-                      "D":f'{self.__HoraDiaSaida["saida"]["hora"]}',
-                      "E":self.HorasTrabalhadas()
-                      } )
-        
-        column1 = sheet["A"]
-        column2 = sheet["C"]
-        for x in column1:
-            x.number_format = f"{numbers.FORMAT_DATE_DDMMYY}"
-        for x in column2:
-            x.number_format = f"{numbers.FORMAT_DATE_DDMMYY}"
-        
-        wb.save(f"{self.user}.xlsx")
-        return True
     
     
     def __VerifyArchive(self):
@@ -127,7 +84,19 @@ class Regitrador():
                 self.EntradaStatus = True
                 self.__HoraDiaEntrada = {"entrada":{"data":data,"hora":hora},"tipo":"entrada"}
 
-                self.ExcelRegistro()
+                wb =  load_workbook(f"{os.getcwd()}\{self.user}.xlsx")
+                sheet = wb[f"{self.sheetName}"]
+                actualRow = sheet.max_row+1
+                sheet.cell(row=actualRow,column=1,value=data)
+                sheet.cell(row=actualRow,column=2,value=hora)
+                column1 = sheet["A"]
+                column2 = sheet["C"]
+                for x in column1:
+                    x.number_format = f"{numbers.FORMAT_DATE_DDMMYY}"
+                for x in column2:
+                    x.number_format = f"{numbers.FORMAT_DATE_DDMMYY}"
+
+                wb.save(f"{self.user}.xlsx")
 
                 return self.HoraDiaEntrada
             else:
@@ -140,23 +109,35 @@ class Regitrador():
                 erro.writelines(f"{log}")
 
     def SaidaRegistro(self) -> dict:
-        try:
-            if self.EntradaStatus == True and self.__DiaDeTrabalho == 0:                
-                datatime = datetime.datetime.now()
-                
-                data  = self.dataDeHoje
-                hora  = datatime.strftime("%H:%M")
+        try:               
+            datatime = datetime.datetime.now()
+            
+            data  = self.dataDeHoje
+            hora  = datatime.strftime("%H:%M")
 
-                self.__HoraDiaSaida = {"saida":{"data":data,"hora":hora},"tipo":"saida"}
-                self.EntradaStatus = False
-                self.__DiaDeTrabalho = 1
-                self.ExcelRegistro()
-                return self.HoraDiaSaida
-        
+            self.__HoraDiaSaida = {"saida":{"data":data,"hora":hora},"tipo":"saida"}
+            self.EntradaStatus = False
+            self.__DiaDeTrabalho = 1
+            
+
+            wb =  load_workbook(f"{os.getcwd()}\{self.user}.xlsx")
+            sheet = wb[f"{self.sheetName}"]
+            actualRow = sheet.max_row
+            sheet.cell(row=actualRow,column=3,value=data)
+            sheet.cell(row=actualRow,column=4,value=hora)
+            sheet.cell(row=actualRow,column=5,value=self.HorasTrabalhadas())
+            
+            column1 = sheet["A"]
+            column2 = sheet["C"]
+            for x in column1:
+                x.number_format = f"{numbers.FORMAT_DATE_DDMMYY}"
+            for x in column2:
+                x.number_format = f"{numbers.FORMAT_DATE_DDMMYY}"
                 
-            else:
-                print(f"User: {self.user} Já saiu do trabalho!")
-                return False
+
+            wb.save(f"{self.user}.xlsx")
+
+            return self.HoraDiaSaida
             
         except Exception as log:
             with open("Log_SaidaRegistro.txt","w") as erro:
@@ -164,19 +145,21 @@ class Regitrador():
 
     def HorasTrabalhadas(self):
         try:
+            wb =  load_workbook(f"{os.getcwd()}\{self.user}.xlsx")
+            sheet = wb[f"{self.sheetName}"]
+            maxrow = self.actualRow = sheet.max_row
+
             timeconvert = lambda x: datetime.datetime.strptime(x,"%H:%M")
 
-            horaEntrada = timeconvert(self.HoraDiaEntrada["entrada"]["hora"])
+            horaEntrada = timeconvert(sheet.cell(row=maxrow,column=2).value)
 
-            horaSaida = timeconvert(self.HoraDiaSaida["saida"]["hora"])
+            horaSaida = timeconvert(sheet.cell(row=maxrow,column=4).value)
 
             horasTrabalhadas = horaSaida - horaEntrada           
 
-        
-            return  horasTrabalhadas 
+            wb.close()
+            return  horasTrabalhadas
 
         except Exception as log:
             with open("Log_HorasTrabalhadas.txt","w") as erro:
                erro.writelines(f"{log}")
-        
-    
