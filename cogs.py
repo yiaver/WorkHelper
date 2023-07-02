@@ -20,21 +20,21 @@ class PontosTrabalho(commands.Cog):
         try:
             author = ctx.author
             register = Regitrador(f"{author}")
-            #role = discord.utils.get(ctx.guild.roles, name="Trabalhando")
+            
             register.EntradaRegistro()
-            return await ctx.response.send_message(f"Usuario : {author} Entrou No trabalho. ")
+            return await ctx.response.send_message(f"``` Usuario : {author} Entrou No trabalho. ```")
         except Exception as err:
             logging.error(f"Error in /entrar of {ctx.author} : {err}")
         
 
     @application_command(name="sair",description="sai do trabalho",guild_ids=guildlist)
     async def sair (self,ctx):
-        #role = discord.utils.get(ctx.guild.roles, name="Trabalhando")
+        
         try:
             author = ctx.author
             register = Regitrador(f"{author}")
             register.SaidaRegistro()
-            return await ctx.response.send_message(f"Usuario : {author} Saiu do Trabalho .\nHoras Trabalhadas:\n *** {register.HorasTrabalhadas()}  ***")
+            return await ctx.response.send_message(f"```Usuario : {author} Saiu do Trabalho .\nHoras Trabalhadas:\n{register.HorasTrabalhadas()}  -30 minutos de pausa```")
         except Exception as err:
             logging.error(f"Error in /sair of {ctx.author} : {err}")
             

@@ -85,6 +85,8 @@ class Regitrador():
                 self.__HoraDiaEntrada = {"entrada":{"data":data,"hora":hora},"tipo":"entrada"}
 
                 wb =  load_workbook(f"{os.getcwd()}\{self.user}.xlsx")
+                if not self.sheetName in wb.sheetnames:
+                    wb.create_sheet(f"{self.sheetName}")
                 sheet = wb[f"{self.sheetName}"]
                 actualRow = sheet.max_row+1
                 sheet.cell(row=actualRow,column=1,value=data)
@@ -103,7 +105,6 @@ class Regitrador():
                 print(f"User : {self.user} Já esta trabalhando.")
                 return False
             
-
         except Exception as log:
             with open("Log_EntradaRegistro.txt","w") as erro:
                 erro.writelines(f"{log}")
@@ -125,7 +126,7 @@ class Regitrador():
             actualRow = sheet.max_row
             sheet.cell(row=actualRow,column=3,value=data)
             sheet.cell(row=actualRow,column=4,value=hora)
-            sheet.cell(row=actualRow,column=5,value=self.HorasTrabalhadas())
+            
             
             column1 = sheet["A"]
             column2 = sheet["C"]
@@ -135,6 +136,11 @@ class Regitrador():
                 x.number_format = f"{numbers.FORMAT_DATE_DDMMYY}"
                 
 
+            wb.save(f"{self.user}.xlsx")
+            
+            wb =  load_workbook(f"{os.getcwd()}\{self.user}.xlsx")
+            sheet = wb[f"{self.sheetName}"]
+            sheet.cell(row=actualRow,column=5,value=self.HorasTrabalhadas())
             wb.save(f"{self.user}.xlsx")
 
             return self.HoraDiaSaida
@@ -149,16 +155,16 @@ class Regitrador():
             sheet = wb[f"{self.sheetName}"]
             maxrow = self.actualRow = sheet.max_row
 
-            timeconvert = lambda x: datetime.datetime.strptime(x,"%H:%M")
+            timeconvert = lambda x: datetime.datetime.strptime(str(x),"%H:%M")
 
             horaEntrada = timeconvert(sheet.cell(row=maxrow,column=2).value)
 
             horaSaida = timeconvert(sheet.cell(row=maxrow,column=4).value)
 
-            horasTrabalhadas = horaSaida - horaEntrada           
+            horasTrabalhadas = (horaSaida - horaEntrada) - datetime.timedelta(minutes=30)      
 
             wb.close()
-            return  horasTrabalhadas
+            return  horasTrabalhadas 
 
         except Exception as log:
             with open("Log_HorasTrabalhadas.txt","w") as erro:
